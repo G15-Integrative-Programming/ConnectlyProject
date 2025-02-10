@@ -49,7 +49,7 @@ class CommentListCreate(APIView):
             serializer.save() 
             return Response(serializer.data, status=status.HTTP_201_CREATED) 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+"""
 # Retrieve All Users (GET)
 def get_users(request):
     try:
@@ -90,3 +90,4 @@ def create_post(request):
             return JsonResponse({'error': 'Author not found'}, status=404)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
+"""
