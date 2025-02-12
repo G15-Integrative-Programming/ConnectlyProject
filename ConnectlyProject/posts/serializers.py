@@ -1,6 +1,6 @@
-from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
-from .models import User, Post, Comment
+from rest_framework import serializers # import the serializers module from the rest_framework package
+from rest_framework.validators import UniqueValidator # used to validate unique fields
+from .models import User, Post, Comment # import the User, Post, and Comment models
 
 class UserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
@@ -14,51 +14,55 @@ class UserSerializer(serializers.ModelSerializer):
             'blank': 'username is required',
             'max_length': 'username must be 50 characters or less',
     }, validators=[
-            UniqueValidator(queryset=User.objects.all(), message='username already exists')
+            UniqueValidator(queryset=User.objects.all(), message='username already exists') #uses the UniqueValidator class to validate that the username is unique
         ])
-    class Meta:
+    def validate_username(self, value): # Check if username is alphanumeric (only letters and numbers)
+        if not value.isalnum(): # uses the isalnum() method to check if the username contains only alphanumeric characters
+            raise serializers.ValidationError("Username must contain only alphanumeric characters.") # raises a validation error if the username contains non-alphanumeric characters
+        return value
+
+    class Meta: # Meta class to define the model and fields to serialize
         model = User
         fields = ['id', 'username', 'email', 'created_at']
 
 class PostSerializer(serializers.ModelSerializer):
-    comments = serializers.StringRelatedField(many=True, read_only=True)
-    content = serializers.CharField(
+    comments = serializers.StringRelatedField(many=True, read_only=True) # Define the comments field as a StringRelatedField
+    content = serializers.CharField( # Define the content field as a CharField
         error_messages={
-            'blank': 'content is required',
+            'blank': 'content is required and cannot be empty.',
 })
-    author = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(),
+    author = serializers.PrimaryKeyRelatedField( # Define the author field as a PrimaryKeyRelatedField
+        queryset=User.objects.all(), # Query the User model for all objects
         error_messages={
             'required': 'Author is required.',
             'does_not_exist': 'User with the given ID does not exist.'
 })
-    class Meta:
+    class Meta: # Meta class to define the model and fields to serialize
         model = Post
         fields = ['id', 'content', 'author', 'created_at', 'comments']
 
 class CommentSerializer(serializers.ModelSerializer):
-    # Override author and post fields to be simple integers
-    author = serializers.IntegerField()
-    post = serializers.IntegerField()
+    # Use PrimaryKeyRelatedField to ensure the fields remain as relation objects
+    text = serializers.CharField(
+        error_messages={
+            'blank': 'Text is required and cannot be empty.'
+        }
+    )
+    author = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        error_messages={
+            'required': "Author is required and cannot be empty.",
+            'does_not_exist': "Author with the given ID does not exist."
+        }
+    )
+    post = serializers.PrimaryKeyRelatedField(
+        queryset=Post.objects.all(),
+        error_messages={
+            'required': "Post is required and cannot be empty.",
+            'does_not_exist': "Post with the given ID does not exist."
+        }
+    )
 
     class Meta:
         model = Comment
         fields = ['id', 'text', 'author', 'post', 'created_at']
-
-    def validate_author(self, value):
-        if not value:
-            raise serializers.ValidationError("Author is required and cannot be empty.")
-        try:
-            user = User.objects.get(id=value)
-        except User.DoesNotExist:
-            raise serializers.ValidationError("Author with the given ID does not exist or is invalid.")
-        return user
-
-    def validate_post(self, value):
-        if not value:
-            raise serializers.ValidationError("Post is required and cannot be empty.")
-        try:
-            post = Post.objects.get(id=value)
-        except Post.DoesNotExist:
-            raise serializers.ValidationError("Post with the given ID does not exist or is invalid.")
-        return post
