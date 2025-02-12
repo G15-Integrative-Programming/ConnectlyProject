@@ -2,7 +2,13 @@ from rest_framework import serializers # import the serializers module from the 
 from rest_framework.validators import UniqueValidator # used to validate unique fields
 from .models import User, Post, Comment # import the User, Post, and Comment models
 
+class PostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Post
+        fields = ['id', 'content', 'author', 'created_at']
+
 class UserSerializer(serializers.ModelSerializer):
+    liked_posts = PostSerializer(many=True, read_only=True)
     email = serializers.EmailField(
         error_messages={
             'blank': 'email is required',
@@ -23,7 +29,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta: # Meta class to define the model and fields to serialize
         model = User
-        fields = ['id', 'username', 'email', 'created_at']
+        fields = ['id', 'username', 'email', 'liked_posts', 'created_at']
 
 class PostSerializer(serializers.ModelSerializer):
     comments = serializers.StringRelatedField(many=True, read_only=True) # Define the comments field as a StringRelatedField
@@ -62,7 +68,8 @@ class CommentSerializer(serializers.ModelSerializer):
             'does_not_exist': "Post with the given ID does not exist."
         }
     )
+    post_content = serializers.CharField(source='post.content', read_only=True)
 
     class Meta:
         model = Comment
-        fields = ['id', 'text', 'author', 'post', 'created_at']
+        fields = ['id', 'text', 'author', 'post','post_content', 'created_at']
