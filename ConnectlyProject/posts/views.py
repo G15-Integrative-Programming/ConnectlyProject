@@ -21,7 +21,10 @@ class UserListCreate(APIView):
         serializer = UserSerializer(data=request.data) 
         if serializer.is_valid():
             serializer.save() 
-            return Response(serializer.data, status=status.HTTP_201_CREATED) 
+            return Response({
+                'message': 'User created successfully', 
+                'user': serializer.data
+            }, status=status.HTTP_201_CREATED) 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
 
 class PostListCreate(APIView): 
@@ -34,7 +37,10 @@ class PostListCreate(APIView):
         serializer = PostSerializer(data=request.data) 
         if serializer.is_valid(): 
             serializer.save() 
-            return Response(serializer.data, status=status.HTTP_201_CREATED) 
+            return Response({
+                'message': 'Post created successfully', 
+                'post': serializer.data
+            }, status=status.HTTP_201_CREATED) 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
 
 class CommentListCreate(APIView): 
@@ -47,8 +53,140 @@ class CommentListCreate(APIView):
         serializer = CommentSerializer(data=request.data) 
         if serializer.is_valid(): 
             serializer.save() 
-            return Response(serializer.data, status=status.HTTP_201_CREATED) 
+            return Response({
+                'message': 'Comment created successfully', 
+                'comment': serializer.data
+            }, status=status.HTTP_201_CREATED) 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class UserDetail(APIView):
+    def get_object(self, pk):
+        try:
+            return User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        user = self.get_object(pk)
+        if user is None:
+            return Response({
+                'message': 'User not found',
+            }, status=status.HTTP_404_NOT_FOUND)
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        user = self.get_object(pk)
+        if user is None:
+            return Response({
+                'message': 'User not found',
+            }, status=status.HTTP_404_NOT_FOUND)
+        serializer = UserSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'message': 'User updated successfully',
+                'user': serializer.data
+            }, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        user = self.get_object(pk)
+        if user is None:
+            return Response({
+                'message': 'User not found',
+            }, status=status.HTTP_404_NOT_FOUND)
+        user.delete()
+        return Response({
+            'message': 'User deleted successfully'
+        }, status=status.HTTP_204_NO_CONTENT)
+    
+class PostDetail(APIView):
+    def get_object(self, pk):
+        try:
+            return Post.objects.get(pk=pk)
+        except Post.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        post = self.get_object(pk)
+        if post is None:
+            return Response({
+                'message': 'Post not found',
+            }, status=status.HTTP_404_NOT_FOUND)
+        serializer = PostSerializer(post)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        post = self.get_object(pk)
+        if post is None:
+            return Response({
+                'message': 'Post not found',
+            }, status=status.HTTP_404_NOT_FOUND)
+        serializer = PostSerializer(post, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'message': 'Post updated successfully',
+                'user': serializer.data
+            }, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        post = self.get_object(pk)
+        if post is None:
+            return Response({
+                'message': 'Post not found',
+            }, status=status.HTTP_404_NOT_FOUND)
+        post.delete()
+        return Response({
+            'message': 'Post deleted successfully'
+        }, status=status.HTTP_204_NO_CONTENT)
+
+class CommentDetail(APIView):
+    def get_object(self, pk):
+        try:
+            return Comment.objects.get(pk=pk)
+        except Comment.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        comment = self.get_object(pk)
+        if comment is None:
+            return Response({
+                'message': 'Comment not found',
+            }, status=status.HTTP_404_NOT_FOUND)
+        serializer = CommentSerializer(comment)
+        return Response(serializer.data)
+
+    def put(self, request, pk):
+        comment = self.get_object(pk)
+        if comment is None:
+            return Response({
+                'message': 'Comment not found',
+            }, status=status.HTTP_404_NOT_FOUND)
+        serializer = CommentSerializer(comment, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'message': 'Comment updated successfully',
+                'user': serializer.data
+            }, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        comment = self.get_object(pk)
+        if comment is None:
+            return Response({
+                'message': 'Comment not found',
+            }, status=status.HTTP_404_NOT_FOUND)
+        comment.delete()
+        return Response({
+            'message': 'Comment deleted successfully'
+        }, status=status.HTTP_204_NO_CONTENT)
+
+
+
 """
 # Retrieve All Users (GET)
 def get_users(request):
