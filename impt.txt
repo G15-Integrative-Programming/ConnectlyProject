@@ -1,0 +1,34 @@
+superuser
+{
+	"username": "admin", 
+	"email": "admin1234" 
+}
+
+
+
+userlist
+
+
+
+
+user:
+
+{
+	"username": "testuser", 
+	"email": "test@example.com" 
+}
+
+post:
+
+{
+	"content": "This is a test post.",	 
+	"author": 1 
+}
+
+comment:
+
+{
+	"text": "This is a comment.", 
+	"author": 1, 
+	"post": 1 
+}

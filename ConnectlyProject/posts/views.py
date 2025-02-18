@@ -3,17 +3,18 @@ from django.shortcuts import render
 import json
 
 # Third-party imports
-from django.http import JsonResponse
+
 from django.contrib.auth.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
+from .permissions import IsAdminOrModerator, IsOwnerOrReadOnly
 
 # Local imports
-from .models import Post, Comment
+from .models import User, Post, Comment
 from .serializers import UserSerializer, PostSerializer, CommentSerializer
 
 # Create your views here.
@@ -26,10 +27,28 @@ def register(request):
         user = User.objects.create_user(username=username, password=password)
         return Response({"message": "User created successfully!"}, status=status.HTTP_201_CREATED)
 
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
 class UserListCreate(APIView):
     authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
-    
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
     def get(self, request): 
         users = User.objects.all() 
         serializer = UserSerializer(users, many=True) 
@@ -45,7 +64,10 @@ class UserListCreate(APIView):
             }, status=status.HTTP_201_CREATED) 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
 
-class PostListCreate(APIView): 
+class PostListCreate(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
     def get(self, request): 
         posts = Post.objects.all() 
         serializer = PostSerializer(posts, many=True) 
@@ -61,7 +83,10 @@ class PostListCreate(APIView):
             }, status=status.HTTP_201_CREATED) 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
 
-class CommentListCreate(APIView): 
+class CommentListCreate(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
     def get(self, request): 
         comments = Comment.objects.all() 
         serializer = CommentSerializer(comments, many=True) 
@@ -78,6 +103,9 @@ class CommentListCreate(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserDetail(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
     def get_object(self, pk):
         try:
             return User.objects.get(pk=pk)
@@ -119,7 +147,12 @@ class UserDetail(APIView):
             'message': 'User deleted successfully'
         }, status=status.HTTP_204_NO_CONTENT)
     
+
+"""    
 class PostDetail(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    
     def get_object(self, pk):
         try:
             return Post.objects.get(pk=pk)
@@ -132,6 +165,7 @@ class PostDetail(APIView):
             return Response({
                 'message': 'Post not found',
             }, status=status.HTTP_404_NOT_FOUND)
+        self.check_object_permissions(request, post)
         serializer = PostSerializer(post)
         return Response(serializer.data)
 
@@ -141,6 +175,7 @@ class PostDetail(APIView):
             return Response({
                 'message': 'Post not found',
             }, status=status.HTTP_404_NOT_FOUND)
+        self.check_object_permissions(request, post)
         serializer = PostSerializer(post, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -156,12 +191,16 @@ class PostDetail(APIView):
             return Response({
                 'message': 'Post not found',
             }, status=status.HTTP_404_NOT_FOUND)
+        self.check_object_permissions(request, post)
         post.delete()
         return Response({
             'message': 'Post deleted successfully'
         }, status=status.HTTP_204_NO_CONTENT)
 
 class CommentDetail(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
     def get_object(self, pk):
         try:
             return Comment.objects.get(pk=pk)
@@ -203,9 +242,6 @@ class CommentDetail(APIView):
             'message': 'Comment deleted successfully'
         }, status=status.HTTP_204_NO_CONTENT)
 
-
-
-"""
 # Retrieve All Users (GET)
 def get_users(request):
     try:
