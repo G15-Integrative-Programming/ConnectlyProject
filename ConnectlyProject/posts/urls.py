@@ -1,4 +1,6 @@
-from django.urls import path
+from rest_framework.routers import DefaultRouter
+from rest_framework.authtoken.views import obtain_auth_token
+from django.urls import path, include
 from . import views
 from .views import UserListCreate, PostListCreate, CommentListCreate
 
@@ -14,4 +16,7 @@ urlpatterns = [
     path('posts/<int:pk>/', views.PostDetail.as_view(), name='post-detail'),
     path('comments/', views.CommentListCreate.as_view(), name='comment-list-create'),
     path('comments/<int:pk>/', views.CommentDetail.as_view(), name='comment-detail'),
+
+
+    path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
 ]

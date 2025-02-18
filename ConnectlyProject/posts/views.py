@@ -1,17 +1,35 @@
 from django.shortcuts import render
+# Standard library imports
+import json
+
+# Third-party imports
+from django.http import JsonResponse
+from django.contrib.auth.models import User
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
+
+# Local imports
+from .models import Post, Comment
+from .serializers import UserSerializer, PostSerializer, CommentSerializer
 
 # Create your views here.
+@api_view(['POST'])
+def register(request):
+    if request.method == 'POST':
+        username = request.data.get('username')
+        password = request.data.get('password')
+        #create user with encrypted password
+        user = User.objects.create_user(username=username, password=password)
+        return Response({"message": "User created successfully!"}, status=status.HTTP_201_CREATED)
 
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
-from .models import User, Post, Comment
-from .serializers import UserSerializer, PostSerializer, CommentSerializer
-from rest_framework.views import APIView
-from rest_framework.response import Response 
-from rest_framework import status
-
-class UserListCreate(APIView): 
+class UserListCreate(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request): 
         users = User.objects.all() 
         serializer = UserSerializer(users, many=True) 
